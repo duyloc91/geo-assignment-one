@@ -1,7 +1,7 @@
 
 var app = angular.module('geo-ass-one', ['leaflet-directive']);
 
-app.controller("LayersOverlaysSimpleController", [ "$scope", function($scope) {
+app.controller("LayersOverlaysSimpleController", [ "$scope", "$http", function($scope, $http) {
             angular.extend($scope, {
                 center: {
                     lat: 1.352083,
@@ -30,5 +30,20 @@ app.controller("LayersOverlaysSimpleController", [ "$scope", function($scope) {
                         }
                     }
                 }
+            });
+
+            // Get the countries geojson data from a JSON
+            $http.get("json/hawkercentre.geojson").success(function(data, status) {
+                console.log(data);
+                angular.extend($scope, {
+                    geojson: {
+                        data: data,
+                        style: {
+                            weight: 3,
+                            opacity: 1,
+                            color: '#ff0000'
+                        }
+                    }
+                });
             });
         }]);
