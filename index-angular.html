@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en-us" ng-app="geo-ass-one">
+  <head>
+    <meta charset="UTF-8">
+    <title>Geo-assignment-one by duyloc91</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="stylesheets/stylesheet.css" />
+  </head>
+  <body ng-controller="LayersOverlaysSimpleController">
+    <leaflet class="map" geojson="geojson" lf-center="center" layers="layers"></leaflet>
+
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/leaflet/dist/leaflet.js"></script>
+    <script src="javascripts/angular-leaflet-directive.min.js"></script>
+    <script src="javascripts/main.js"></script>
+  </body>
+</html>
