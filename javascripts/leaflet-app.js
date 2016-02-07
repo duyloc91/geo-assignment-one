@@ -13,12 +13,13 @@ queue()
     .defer(d3.json, 'geojson/historical_sites.geojson') // geojson points
     .defer(d3.json, 'geojson/tourist_attractions.geojson')
     .defer(d3.json, 'geojson/subway_sg.geojson')
+    .defer(d3.json, 'geojson/MP14_Subzone_Web_PL.geojson')
     .await(makeMyMap); // function that uses files
 
 
 
 
-function makeMyMap(error, museums, historical_sites, tourist_attractions, subway_sg) {
+function makeMyMap(error, museums, historical_sites, tourist_attractions, subway_sg, MP14_Subzone_Web_PL) {
     
     var museums_L = L.geoJson(museums, {
         pointToLayer: function (feature, latlng) {
@@ -75,6 +76,16 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
         }
     });
 
+    var MP14_Subzone_Web_PL_L = L.geoJson(MP14_Subzone_Web_PL, {
+        style: function(feature){ 
+            return {
+                color: 'blue',
+                weight: 1,
+                opacity: .2
+            }
+        }
+    });
+
     var baseMaps = {
         "Emerald Mapbox" : emeraldBase,
     };
@@ -83,7 +94,8 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
         "Museums" : museums_L,
         "Historical Sites" : historical_sites_L,
         "Tourist Attractions" : tourist_attractions_L,
-        "Subway" : subway_sg_L
+        "Subway" : subway_sg_L,
+        "SG Sub Zones": MP14_Subzone_Web_PL_L
     }
 
 
