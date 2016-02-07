@@ -1,6 +1,6 @@
 var map = L.map('map').setView([1.352083, 103.819836], 12);
 
-L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+var emeraldBase = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
     maxZoom: 18,
     id: 'duyloc91.p2ppi39i',
@@ -32,7 +32,7 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
             return L.marker(latlng, {icon: redMarker}).bindPopup('<b>'+feature.properties.NAME + '</b><br />'
                                              + feature.properties.DESCRIPTIO);
         }
-    }).addTo(map);
+    });
 
     var historical_sites_L = L.geoJson(historical_sites, {
         pointToLayer: function (feature, latlng) {
@@ -46,7 +46,7 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
             return L.marker(latlng, {icon: redMarker}).bindPopup('<b>'+feature.properties.NAME + '</b><br />'
                                              + feature.properties.DESCRIPTIO);
         }
-    }).addTo(map);
+    });
 
     
     console.log(tourist_attractions);
@@ -62,7 +62,7 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
             return L.marker(latlng, {icon: redMarker}).bindPopup('<b>'+feature.properties.PAGETITLE + '</b><br />'
                                              + feature.properties.OVERVIEW);
         }
-    }).addTo(map);
+    });
 
     
     var subway_sg_L = L.geoJson(subway_sg, {
@@ -73,28 +73,22 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
                 opacity: .4
             }
         }
-    }).addTo(map);
+    });
+
+    var baseMaps = {
+        "Emerald Mapbox" : emeraldBase,
+    };
+
+    var overlayMaps = {
+        "Museums" : museums_L,
+        "Historical Sites" : historical_sites_L,
+        "Tourist Attractions" : tourist_attractions_L,
+        "Subway" : subway_sg_L
+    }
+
+
+    L.control.layers(baseMaps, overlayMaps).addTo(map);
 }
 
-// var MyControl = L.Control.extend({
-//     options: {
-//         position: 'topright'
-//     },
-
-//     onAdd: function (map) {
-//         // create the control container with a particular class name
-//         var container = L.DomUtil.create('div', 'my-custom-control');
-
-//         // ... initialize other DOM elements, add listeners, etc.
-
-//         return container;
-//     }
-// });
-
-// map.addControl(new MyControl());
-
-
-
-// L.marker([1.352083, 103.819836], {icon: greenIcon}).addTo(map);
 
 
