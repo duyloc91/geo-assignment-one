@@ -19,6 +19,8 @@ queue()
     .defer(d3.json, 'geojson/museums.geojson') // topojson polygons
     .defer(d3.json, 'geojson/historical_sites.geojson') // geojson points
     .defer(d3.json, 'geojson/tourist_attractions.geojson')
+    .defer(d3.json, 'geojson/hotels.geojson')
+    .defer(d3.json, 'geojson/museum_tourist_sites_total_per_zone.geojson')
     .defer(d3.json, 'geojson/subway_sg.geojson')
     .defer(d3.json, 'geojson/census.geojson')
     .await(makeMyMap); // function that uses files
@@ -26,7 +28,7 @@ queue()
 
 
 
-function makeMyMap(error, museums, historical_sites, tourist_attractions, subway_sg, census) {
+function makeMyMap(error, museums, historical_sites, tourist_attractions, hotels, museum_tourist_sites_total_per_zone, subway_sg, census) {
     
     var museums_L = L.geoJson(museums, {
         pointToLayer: function (feature, latlng) {
@@ -57,7 +59,6 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
     });
 
     
-    console.log(tourist_attractions);
     var tourist_attractions_L = L.geoJson(tourist_attractions, {
         pointToLayer: function (feature, latlng) {
 
@@ -71,6 +72,23 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
                                              + feature.properties.OVERVIEW);
         }
     });
+
+    
+    var hotels_L = L.geoJson(hotels, {
+        pointToLayer: function (feature, latlng) {
+
+            var redMarker = L.AwesomeMarkers.icon({
+                icon: 'hotel',
+                prefix: 'fa',
+                markerColor: 'orange',
+                iconColor: 'black'
+            });
+            
+            return L.marker(latlng, {icon: redMarker}).bindPopup('<b>'+feature.properties.PAGETITLE + '</b><br />'
+                                             + feature.properties.OVERVIEW);
+        }
+    });
+
 
     
     var subway_sg_L = L.geoJson(subway_sg, {
@@ -126,7 +144,7 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
         if (!L.Browser.ie && !L.Browser.opera) {
             layer.bringToFront();
         }
-        console.log(layer);
+        
         info.update(layer.feature.properties);
     }
 
@@ -158,28 +176,127 @@ function makeMyMap(error, museums, historical_sites, tourist_attractions, subway
         };
     }
 
-    console.log(census);
     var census_L = L.geoJson(census, {
         style: style,
         onEachFeature: onEachFeature
         }
     );
 
+    //legend
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [0, 5000, 10000, 15000, 20000, 25000, 50000, 80000],
+            labels = [];
+
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+        }
+
+        return div;
+    };
+
+    legend.addTo(map);
+
+    //proportional layer
+    
+    var proportional = {
+        "type": "FeatureCollection",
+        "crs": {
+            "type": "name",
+            "properties": {
+                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+            }
+        },
+
+        "features": []
+    }
+
+    //find centroid of polygon
+    function getCentroid2(arr) {
+        var twoTimesSignedArea = 0;
+        var cxTimes6SignedArea = 0;
+        var cyTimes6SignedArea = 0;
+
+        var length = arr.length
+
+        var x = function (i) { return arr[i % length][0] };
+        var y = function (i) { return arr[i % length][1] };
+
+        for ( var i = 0; i < arr.length; i++) {
+            var twoSA = x(i)*y(i+1) - x(i+1)*y(i);
+            twoTimesSignedArea += twoSA;
+            cxTimes6SignedArea += (x(i) + x(i+1)) * twoSA;
+            cyTimes6SignedArea += (y(i) + y(i+1)) * twoSA;
+        }
+        var sixSignedArea = 3 * twoTimesSignedArea;
+        return [ cxTimes6SignedArea / sixSignedArea, cyTimes6SignedArea / sixSignedArea];        
+    }
+
+    //loop through each subzone
+    for (i = 0; i < museum_tourist_sites_total_per_zone.features.length; i++) { 
+        var zone = museum_tourist_sites_total_per_zone.features[i];
+        var arrOfPoints = zone.geometry.coordinates[0][0];
+        
+        var PerZone = {
+            "type": "Feature",
+            "properties": {
+                "Name": "",
+                "museum_count": 0,
+                "site_count": 0,
+                "attraction_count": 0,
+                "total_count": 0
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": []
+            }
+        };
+        PerZone.geometry.coordinates = getCentroid2(arrOfPoints);
+        PerZone.properties.museum_count = zone.properties.PNTCNT;
+        PerZone.properties.site_count = zone.properties.sites_c;
+        PerZone.properties.attraction_count = zone.properties.tourist_c;
+        PerZone.properties.total_count = zone.properties.totalCount;
+        proportional.features.push(PerZone);
+    } 
+
+    
+
+    var proportional_L = L.geoJson(proportional, {
+        pointToLayer: function(feature, latlng){
+            var radius = feature.properties.total_count*3;
+            return L.circleMarker(latlng, { 
+               fillColor: "#708598",
+               color: "#537898",
+               weight: 1, 
+               fillOpacity: 0.6 
+              }).setRadius(radius);
+        }
+    });
+
 
 
     //load layers and bases into map
     var baseMaps = {
         "Emerald Mapbox" : emeraldBase,
-        "light Base" : lightBase
+        "Light Base" : lightBase
     };
 
     var overlayMaps = {
         "Museums" : museums_L,
         "Historical Sites" : historical_sites_L,
         "Tourist Attractions" : tourist_attractions_L,
+        "Hotels" : hotels_L,
         "Subway" : subway_sg_L,
-        "Census Layer": census_L
+        "Census Layer": census_L,
+        "Pro Layer" : proportional_L
     }
+
 
 
     L.control.layers(baseMaps, overlayMaps).addTo(map);

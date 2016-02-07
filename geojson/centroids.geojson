@@ -1,0 +1,24 @@
+{
+	"type": "FeatureCollection",
+	"crs": {
+		"type": "name",
+		"properties": {
+			"name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+		}
+	},
+
+	"features": []
+}
+
+{
+		"type": "Feature",
+		"properties": {
+			"Name": "The Southbridge Hotel",
+			"description": "",
+			"count": 0
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [103.845656491846, 1.28341928807413]
+		}
+	}
